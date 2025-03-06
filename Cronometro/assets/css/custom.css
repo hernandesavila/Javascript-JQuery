@@ -1,0 +1,34 @@
+.swal2-shown { 
+        display:flex; 
+        height:100vh; 
+        width: 100vw;
+}
+
+.texto-timer {
+    color: white;
+    font-size: calc(7vw + 7vh + 4vmin);
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.texto-timer:hover {
+    color: #c7c7c7;
+}
+
+.texto-mensagem {
+    color: white;
+    font-size: calc(5vw + 5vh + 2vmin);
+    font-weight: bold;
+    animation: Pulse 1s infinite alternate
+}
+
+@keyframes Pulse {
+    0% {
+        transform: scale(0.9); 
+        color: rgb(204, 25, 25);
+    }
+    100% {
+        transform: scale(1);
+        color: white;
+    }
+}

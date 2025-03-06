@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-BR" class="h-100" data-bs-theme="auto">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Cronômetro da 14ª Igreja do Evangelho Quadrangular - Poços de Caldas - MG">
+    <meta name="author" content="Hernandes Oliveira">
+    <title>Cronômetro</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3">
+    <link href="assets/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/css/custom.css" rel="stylesheet">
+</head>
+
+<body class="d-flex flex-column justify-content-center h-100 bg-black">
+    <main class="flex-shrink-0">
+        <div class="container">
+            <div class="p-5 border border-light rounded-3" id="cadastroConometro">
+                <div class="row">
+                    <div class="col-md-12">
+                        <h3 class="display-8 fw-bold text-white">Cronômetro</h3>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-2 mt-2">
+                        <label for="valorHora" class="form-label text-white">Horas</label>
+                        <select class="form-select" id="valorHora">                              
+                        </select>
+                    </div>
+                    <div class="col-md-2 mt-2">
+                        <label for="valorMinuto" class="form-label text-white">Minutos</label>
+                        <select class="form-select" id="valorMinuto">                              
+                        </select>
+                    </div>
+                    <div class="col-md-2 mt-2">
+                        <label for="valorSegundo" class="form-label text-white">Segundos</label>
+                        <select class="form-select" id="valorSegundo">                                
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 d-flex justify-content-end">
+                        <button type="button" class="mt-4 btn btn-secondary" id="btnSalvar">Iniciar</button>
+                    </div>                        
+                </div>
+            </div>
+        </div>
+
+        <div class="mx-4" id="cronometro">
+            <div class="text-center texto-timer" id="timer"></div>            
+            <div class="text-center text-uppercase mt-2 texto-mensagem" id="mensagem"></div>
+        </div>        
+    </main>
+    
+    <script src="assets/dist/js/jquery-3.7.1.min.js"></script>
+    <script src="assets/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="assets/js/app/Util.js"></script>
+    <script src="assets/js/app/Cronometro.js"></script>
+</body>
+</html>
