@@ -1,0 +1,160 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+	  
+      #myCanvas {
+        position: absolute; 
+		overflow: hidden
+      }
+    </style>
+  </head>
+  <body onload="drawBalls();">
+    <canvas id="myCanvas"></canvas>	
+    <script>
+		const MAX_BALLS_NUMBER = 50;
+		
+		var canvas = document.getElementById('myCanvas');
+		var context = canvas.getContext('2d');
+		
+		canvas.width = document.documentElement.clientWidth - 10;
+		canvas.height = document.documentElement.clientHeight - 10;
+
+		context.imageSmoothingEnabled = true;
+		
+		var width = canvas.width;
+		var height = canvas.height;
+		var numberBalls = 1;
+		var ballMaxSize = MAX_BALLS_NUMBER + 10;
+		var balls = [];
+		
+		for(var i = 0; i < numberBalls; i++) {
+			createBall();
+		}
+		
+		function createBall() {
+			if(balls.length < MAX_BALLS_NUMBER) {
+				var radius = getRndInteger(1, ballMaxSize--);
+				var ball = {
+					x: getRndInteger(radius + 1, width - 1),
+					y: getRndInteger(radius + 1, height - 1),
+					radius: radius,
+					dirX: 1,
+					dirY: 1,
+					speed: i % 2 == 0 ? getRndInteger(1, 3) : getRndInteger(2, 4),
+					color: {
+						r: getRndInteger(10, 255),
+						g: getRndInteger(10, 255), 
+						b: getRndInteger(10, 255)
+					}
+				}
+				
+				var overlapping = true;
+				
+				while (overlapping) {
+					overlapping = false;
+				  
+					for (var i = 0; i < balls.length; i++) {
+						if (detectColicion(balls[i], ball)) {
+							overlapping = true;
+							ball.x = Math.random() * (canvas.width - radius * 2) + radius;
+							ball.y = Math.random() * (canvas.height - radius * 2) + radius;
+							
+							break;
+						}
+					}
+				  }
+  
+				balls.push(ball);
+			}
+		}
+		
+		function drawBalls() {
+			context.clearRect(0, 0, canvas.width, canvas.height);
+			
+			balls.forEach(function(ball) {			
+				var changeDirection = false;
+				
+				balls.forEach(function(ballCol) {
+					if(ball != ballCol) {
+						if(detectColicion(ball, ballCol)) {	
+							var dirX1 = ball.dirX;
+							var dirY1 = ball.dirY;
+							var dirX2 = ballCol.dirX;
+							var dirY2 = ballCol.dirY;
+							
+							ball.dirX = dirX2;
+							ball.dirY = dirY2;
+							ballCol.dirX = dirX1;
+							ballCol.dirY = dirY1;
+						}
+					}
+				});
+				
+				if(ball.x + ball.radius > width) {
+					ball.dirX = -ball.speed;
+					changeDirection = true;
+				}
+				
+				if(ball.x - ball.radius < 0) {
+					ball.dirX = ball.speed;
+					changeDirection = true;
+				}
+					
+				if(ball.y + ball.radius > height) {
+					ball.dirY = -ball.speed;
+					changeDirection = true;
+				}
+					
+				if(ball.y - ball.radius < 0) {
+					ball.dirY = ball.speed;
+					changeDirection = true;
+				}
+				
+				if(changeDirection) {
+					createBall();
+				}
+				
+				ball.x += ball.dirX;
+				ball.y += ball.dirY;				
+				
+				context.beginPath();
+				context.arc(ball.x, ball.y, ball.radius, 0, 2 * Math.PI);			
+				context.fillStyle = "#" + rgbTohex(ball.color.r, ball.color.g, ball.color.b);
+				context.fill();
+				context.fillStyle = "#" + rgbTohex(0, 0, 0);
+			});
+			
+			requestAnimationFrame(drawBalls);
+		}
+		
+		function getRndInteger(min, max) {
+			return Math.floor(Math.random() * (max - min) ) + min;
+		}
+
+		function rgbTohex(r, g, b) {
+			if (g !== undefined) 
+				return Number(0x1000000 + r*0x10000 + g*0x100 + b).toString(16).substring(1);
+			else 
+				return Number(0x1000000 + r[0]*0x10000 + r[1]*0x100 + r[2]).toString(16).substring(1);
+		}
+		
+		function detectColicion(ball1, ball2) {			
+			return Math.sqrt((ball1.x - ball2.x) ** 2 + (ball1.y - ball2.y) ** 2) < ball1.radius + ball2.radius ? true : false;			
+		}
+		
+		window.addEventListener("resize", function () {
+			canvas.width = document.documentElement.clientWidth - 10;
+			canvas.height = document.documentElement.clientHeight - 10;
+			
+			width = canvas.width;
+			height = canvas.height;
+		});
+    </script>
+  </body>
+</html>      

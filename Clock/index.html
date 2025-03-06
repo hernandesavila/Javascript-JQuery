@@ -1,0 +1,262 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <style>
+      body {
+        margin: 0px;
+        padding: 0px;		
+      }
+	  
+	  #myCanvas{
+		position: relative;
+		margin: 0 auto;
+	  }
+    </style>
+  </head>
+  <body onload="drawClock();">
+    <canvas id="myCanvas" width="500" height="500"></canvas>
+    <script>
+		var canvas = document.getElementById('myCanvas');
+		var context = canvas.getContext('2d');
+		
+		context.imageSmoothingEnabled = true;	
+		
+		function drawClock() {
+			context.clearRect(0, 0, canvas.width, canvas.height);
+			context.strokeStyle = 'black';
+			
+			var date = new Date();
+			var hours = date.getHours();
+			var minutes = date.getMinutes();
+			var seconds = date.getSeconds();
+			var angleIncrementHours = 360 / 12;
+			var angleIncrementMinutes = 360 / 60;
+			var angleIncrementSeconds = 360 / 60;
+			var angleHours = (angleIncrementHours * (hours % 12)) + ((angleIncrementHours / 60) * minutes) + (((angleIncrementHours / 60) / 60) * seconds);
+			var angleMinutes = (angleIncrementMinutes * minutes) + ((angleIncrementMinutes / 60) * seconds);
+			var angleSeconds = (angleIncrementSeconds * seconds);
+			
+			var width = 70;
+			var height = 0;
+			var xc = document.getElementById("myCanvas").getBoundingClientRect().left + document.getElementById("myCanvas").getBoundingClientRect().width / 2;
+			var yc = document.getElementById("myCanvas").getBoundingClientRect().top + document.getElementById("myCanvas").getBoundingClientRect().height / 2;
+			var x1 = xc;
+			var x2 = xc + width;
+			var y1 = yc;
+			var y2 = yc + height;
+			
+			setShadow(context, '#888888', 5, 3, 3);
+			
+			context.beginPath();
+			context.lineWidth = 3.5;
+			context.arc(x1, y1, 140, 0, 2 * Math.PI);			
+			context.fillStyle = "#eeeeee";
+			context.fill();
+			
+			setShadow(context, 'transparent', 0, 0, 0);
+			
+			context.fillStyle = "black";
+			context.stroke();
+			context.closePath();
+			
+			context.strokeStyle = 'white';
+			
+			context.beginPath();
+			context.lineWidth = 1;
+			context.arc(x1, y1, 137, 0, 2 * Math.PI);
+			context.stroke();
+			context.closePath();
+			
+			setShadow(context, '#888888', 3, 2, 2);
+			
+			context.strokeStyle = 'black';
+			context.beginPath();
+			
+			context.translate(x1, y1);
+			context.rotate((angleHours > 180 ? ((180 - angleHours) * (-1)) + 90 : angleHours - 90) * Math.PI / 180);
+			context.translate(-(x1), -(y1));
+			
+			context.lineWidth = 3.5;
+			context.lineCap = "round";
+			context.moveTo(x1, y1);
+			context.lineTo(x2, y2);
+			context.stroke();	
+			context.closePath();
+			
+			context.beginPath();
+			context.moveTo(x2 + 4, y2);
+			context.lineTo(x2 - 7, y2 - 7);
+			context.lineTo(x2 - 7, y2 + 7);
+			context.lineTo(x2 + 4, y2);
+			context.fill();
+			context.closePath();
+			
+			context.setTransform(1,0,0,1,0,0);
+			
+			width = 100;		
+			height = 0;		
+			x2 = xc + width;			
+			y2 = yc + height;
+			
+			context.beginPath();
+			
+			context.translate(x1, y1);
+			context.rotate((angleMinutes > 180 ? ((180 - angleMinutes) * (-1)) + 90 : angleMinutes - 90) * Math.PI / 180);
+			context.translate(-(x1), -(y1));
+			
+			context.lineWidth = 2;
+			context.lineCap = "round";
+			context.moveTo(x1, y1);
+			context.lineTo(x2, y2);
+			context.stroke();	
+			context.closePath();
+			
+			context.beginPath();
+			context.moveTo(x2 + 3, y2);
+			context.lineTo(x2 - 5, y2 - 5);
+			context.lineTo(x2 - 5, y2 + 5);
+			context.lineTo(x2 + 3, y2);
+			context.fill();
+			context.closePath();
+			
+			context.setTransform(1,0,0,1,0,0);
+			
+			width = 100;			
+			height = 0;		
+			x2 = xc + width;			
+			y2 = yc + height;
+			
+			context.beginPath();
+			
+			context.translate(x1, y1);
+			context.rotate((angleSeconds > 180 ? ((180 - angleSeconds) * (-1)) + 90 : angleSeconds - 90) * Math.PI / 180);
+			context.translate(-(x1), -(y1));
+			
+			context.lineWidth = 1;
+			context.lineCap = "round";
+			context.moveTo(x1, y1);
+			context.lineTo(x2, y2);
+			context.strokeStyle = "red";
+			context.stroke();	
+			
+			context.closePath();
+			
+			context.fillStyle = "red";
+			context.beginPath();
+			context.moveTo(x2 + 1, y2);
+			context.lineTo(x2 - 3, y2 - 3);
+			context.lineTo(x2 - 3, y2 + 3);
+			context.lineTo(x2 + 1, y2);
+			context.fill();
+			context.closePath();
+			
+			context.setTransform(1,0,0,1,0,0);
+			
+			context.fillStyle = "black";
+			context.strokeStyle = 'white';
+			
+			context.beginPath();
+			context.arc(x1, y1, 7, 0, 2 * Math.PI);
+			context.fill();
+			context.stroke();
+			context.closePath();
+			
+			context.strokeStyle = 'black';
+			
+			setShadow(context, 'transparent', 0, 0, 0);
+			
+			var ang;
+			var radius = 135;
+			
+			context.font = radius * 0.12 + "px arial";
+			context.textBaseline = "middle";
+			context.textAlign = "center";
+				
+			for(var num = 1; num <= 12; num++){
+				ang = num * Math.PI / 6;
+				context.rotate(ang);
+				context.translate(0, -radius * 0.85);
+				context.rotate(-ang);
+				//context.fillText(num.toString(), x1, y1);	
+				
+				if(seconds % 5 == 0 && seconds / 5 == num || (num == 12 && seconds == 0))
+					context.fillStyle = "red";
+				
+				context.fillText(convertToRoman(num), x1, y1);	
+				context.fillStyle = "black";				
+				context.rotate(ang);
+				context.translate(0, radius * 0.85);
+				context.rotate(-ang);
+			}
+			
+			for(var i = 0; i <= 60; i++){
+				if(i % 5 != 0) {
+					ang = i * Math.PI / 30;
+					context.rotate(ang);
+					context.translate(0, -radius * 0.85);
+					context.rotate(-ang);
+					context.beginPath();
+					context.arc(x1, y1, 0.7, 0, 2 * Math.PI);
+					
+					if(i == seconds ) 
+						context.fillStyle = "red";
+					
+					context.fill();
+					context.fillStyle = "black";
+					context.closePath();				
+					context.rotate(ang);
+					context.translate(0, radius * 0.85);
+					context.rotate(-ang);
+				}
+			}
+			
+			setShadow(context, '#888888', 4, 3, 3);
+			
+			context.beginPath();
+			context.lineWidth = 2.5;
+			context.roundRect(x1 - 55, y1 + 163, 110, 30, 10);
+			context.fillStyle = "#eeeeee";
+			context.fill();
+			
+			setShadow(context, 'transparent', 0, 0, 0);
+			
+			context.stroke();
+			context.closePath();
+			
+			context.strokeStyle = 'white';
+			
+			context.beginPath();
+			context.lineWidth = 1;
+			context.roundRect(x1 - 53, y1 + 165, 105.5, 26, 8);
+			context.stroke();
+			context.closePath();
+			
+			context.fillStyle = "black";
+			context.fillText((hours < 10 ? "0" + hours : hours) + ":" + (minutes < 10 ? "0" + minutes : minutes) + ":" + (seconds < 10 ? "0" + seconds : seconds), x1, y1 + 180);
+			
+			context.setTransform(1,0,0,1,0,0);			
+			requestAnimationFrame(drawClock);
+		}
+		
+		function setShadow(context, shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY) {
+			context.shadowColor = shadowColor;
+			context.shadowBlur = shadowBlur;
+			context.shadowOffsetX = shadowOffsetX;
+			context.shadowOffsetY = shadowOffsetY;
+		}
+		
+		function convertToRoman(num) {
+			var roman =  {"M" :1000, "CM":900, "D":500, "CD":400, "C":100, "XC":90, "L":50, "XL":40, "X":10, "IX":9, "V":5, "IV":4, "I":1};
+			var str = "";
+
+			for (var i of Object.keys(roman) ) {
+				var q = Math.floor(num / roman[i]);
+				num -= q * roman[i];
+				str += i.repeat(q);
+			}
+
+			return str;
+		}
+    </script>
+  </body>
+</html>      

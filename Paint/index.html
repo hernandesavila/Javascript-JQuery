@@ -1,0 +1,527 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <style>
+      body {
+        margin: 0px;
+        padding: 0px;		
+      }
+	  
+	  #myCanvas{
+		border: 1px solid #000;
+		position: relative;
+		margin: 0 auto;
+	  }
+    </style>
+  </head>
+  <body onmousedown="mouseDown(event)" onmouseup="mouseUp(event)" onmousemove="mouseMove(event)" onkeypress="keyPress(event)">
+    <canvas id="myCanvas" width="500" height="500"></canvas>
+	<div id="clear"><a href="javascript:clearCanvas()">Limpar</a></div>
+	<div id="formObjects">
+	  <input type="radio" id="formLine" name="formObject" value="Line" checked> <u>L</u>ine
+	  <input type="radio" id="formRectangle" name="formObject" value="Rectangle"> <u>R</u>ectangle
+	  <input type="radio" id="formElipse" name="formObject" value="Rectangle"> <u>E</u>lipse
+	  <input type="radio" id="formPolygon" name="formObject" value="Polygon"> <u>P</u>lygon
+	  <input type="radio" id="formStar" name="formObject" value="Star"> <u>S</u>tar&nbsp;&nbsp;&nbsp;
+	  <label for="formPolygonNumberSides">Num Sides: </label>
+	  <input type="text" id="formPolygonNumberSides" name="formPolygonNumberSides" value="3">
+	</div>
+	<div id="functions">
+	  <input type="radio" id="functionDraw" name="functionsObjects" value="Draw" checked> Draw
+	  <input type="radio" id="functionMove" name="functionsObjects" value="Move"> Move
+	  <input type="radio" id="functionRotate" name="functionsObjects" value="Rotate"> Rotate
+	</div>
+    <script>
+		var canvas = document.getElementById('myCanvas');
+		var context = canvas.getContext('2d');
+		var tempLine = {};
+		var tempRetangle = {};
+		var tempElipse = {};
+		var tempPolygon = {};
+		var tempStar = {};
+		var selectedFormObject = {};
+		var formsObjects = [];
+		var historyFormsUndo = [];
+		var historyFormsRedo = [];
+		var xPressed;
+		var yPressed;
+		var xOriginRotation;
+		var yOriginRotation;
+		var xAnt;
+		var yAnt;
+		var draw;
+		
+		context.imageSmoothingEnabled = true;	
+		
+		function mouseDown(event) {				
+			if(checkMouseInDrawableArea(event.clientX, event.clientY)) {
+				xPressed = event.clientX;
+				yPressed = event.clientY;
+				
+				if(document.getElementById('functionDraw').checked)
+					draw = true;
+				else if(document.getElementById('functionMove').checked || document.getElementById('functionRotate').checked){
+					formsObjects.forEach(function(obj) {
+						switch(obj.formObject) {
+							case "line":
+								if(interceptLine(obj.x1, obj.y1, obj.x2, obj.y2, xPressed, yPressed)) 								
+									selectedFormObject = obj;
+							break;
+							case "rectangle":
+								if(interceptRectangle(obj.x1, obj.y1, obj.x2, obj.y2, xPressed, yPressed))
+									selectedFormObject = obj;
+							break;
+							case "elipse":
+								if(interceptElipse(obj.x1, obj.y1, obj.x2, obj.y2, xPressed, yPressed))
+									selectedFormObject = obj;
+							break;
+							case "polygon":
+								if(interceptPolygon(obj.x1, obj.y1, obj.x2, obj.y2, xPressed, yPressed))
+									selectedFormObject = obj;
+							break;
+							case "star":
+								if(interceptStar(obj.x1, obj.y1, obj.x2, obj.y2, xPressed, yPressed))
+									selectedFormObject = obj;
+							break;
+						}						
+					});
+					
+					xAnt = xPressed;
+					yAnt = yPressed;
+					
+					/*if(!isEmpty(selectedFormObject)) {
+						xOriginRotation = selectedFormObject.x2;
+						yOriginRotation = selectedFormObject.y2;
+					}*/
+				}				
+			}
+		}
+		
+		function mouseUp(event) {
+			selectedFormObject = {};
+			
+			if(draw) {
+				draw = false;
+				
+				if(document.getElementById('formLine').checked) {
+					formsObjects.push({formObject: "line", x1: tempLine.x1, y1: tempLine.y1, x2: tempLine.x2, y2: tempLine.y2});
+				} else if(document.getElementById('formRectangle').checked) {
+					formsObjects.push({formObject: "rectangle", x1: tempRetangle.x1, y1: tempRetangle.y1, x2: tempRetangle.x2, y2: tempRetangle.y2});
+				} else if(document.getElementById('formElipse').checked) {
+					formsObjects.push({formObject: "elipse", x1: tempElipse.x1, y1: tempElipse.y1, x2: tempElipse.x2, y2: tempElipse.y2});
+				} else if(document.getElementById('formPolygon').checked) {
+					formsObjects.push({formObject: "polygon", x1: tempPolygon.x1, y1: tempPolygon.y1, x2: tempPolygon.x2, y2: tempPolygon.y2, numberSides: tempPolygon.numberSides});
+				} else if(document.getElementById('formStar').checked) {
+					formsObjects.push({formObject: "star", x1: tempStar.x1, y1: tempStar.y1, x2: tempStar.x2, y2: tempStar.y2, numberSides: tempStar.numberSides});
+				}
+				
+				historyFormsUndo.push(formsObjects[formsObjects.length - 1]);				
+				repaint();
+			} 
+		}
+		
+		function mouseMove(event) {		
+			var canvasPosition = document.getElementById("myCanvas").getBoundingClientRect();
+			var xMouse;
+			var yMouse;
+			
+			if(event.clientX < canvasPosition.left)
+				xMouse = canvasPosition.left;
+			else if(event.clientX > canvasPosition.left + canvasPosition.width)
+				xMouse = canvasPosition.left + canvasPosition.width;
+			else
+				xMouse = event.clientX;
+				
+			if(event.clientY < canvasPosition.top)
+				yMouse = canvasPosition.top;
+			else if(event.clientY > canvasPosition.top + canvasPosition.height)
+				yMouse = canvasPosition.top + canvasPosition.height;
+			else
+				yMouse = event.clientY;
+					
+			if(draw) {	
+				repaint();
+				
+				if(document.getElementById('formLine').checked) {
+					drawLine(xPressed, yPressed, event.clientX, event.clientY);
+					
+					tempLine.x1 = xPressed;
+					tempLine.y1 = yPressed;
+					tempLine.x2 = xMouse;
+					tempLine.y2 = yMouse;		
+				} else if(document.getElementById('formRectangle').checked) {
+					drawRetangle(xPressed, yPressed, event.clientX, event.clientY);					
+				
+					tempRetangle.x1 = xPressed;
+					tempRetangle.y1 = yPressed;
+					tempRetangle.x2 = xMouse;
+					tempRetangle.y2 = yMouse;
+				} else if(document.getElementById('formElipse').checked) {
+					drawElipse(xPressed, yPressed, event.clientX, event.clientY);					
+				
+					tempElipse.x1 = xPressed;
+					tempElipse.y1 = yPressed;
+					tempElipse.x2 = xMouse;
+					tempElipse.y2 = yMouse;
+				} else if(document.getElementById('formPolygon').checked) {
+					var numberSides = document.getElementById("formPolygonNumberSides").value > 0 ? document.getElementById("formPolygonNumberSides").value : 3;
+					
+					drawPolygon(xPressed, yPressed, event.clientX, event.clientY, numberSides);		
+					
+					tempPolygon.x1 = xPressed;
+					tempPolygon.y1 = yPressed;
+					tempPolygon.x2 = xMouse;
+					tempPolygon.y2 = yMouse;
+					tempPolygon.numberSides = numberSides;
+				} else if(document.getElementById('formStar').checked) {
+					var numberSides = document.getElementById("formPolygonNumberSides").value > 0 ? document.getElementById("formPolygonNumberSides").value : 3;
+					
+					drawStar(xPressed, yPressed, event.clientX, event.clientY, numberSides);		
+					
+					tempStar.x1 = xPressed;
+					tempStar.y1 = yPressed;
+					tempStar.x2 = xMouse;
+					tempStar.y2 = yMouse;
+					tempStar.numberSides = numberSides;
+				}								
+			} else if(document.getElementById('functionMove').checked && !isEmpty(selectedFormObject)) {				
+				selectedFormObject.x1 += xMouse - xAnt;
+				selectedFormObject.y1 += yMouse - yAnt;
+				selectedFormObject.x2 += xMouse - xAnt;
+				selectedFormObject.y2 += yMouse - yAnt;
+				
+				xAnt = xMouse;
+				yAnt = yMouse;
+				
+				repaint();
+			} else if(document.getElementById('functionRotate').checked && !isEmpty(selectedFormObject)) {				
+				selectedFormObject.rotationAngle = convertToDegrees(Math.atan2(yMouse - selectedFormObject.y1, xMouse - selectedFormObject.x1));
+				/*var r = rotate(selectedFormObject.x1, selectedFormObject.y1, xOriginRotation, yOriginRotation, angle);
+				
+				if(document.getElementById('formRectangle').checked) {
+					var tx = (-(xOriginRotation - selectedFormObject.x1)/2);
+					var ty = (-(yOriginRotation - selectedFormObject.y1)/2);
+
+					var rot = angle * Math.PI/180;
+
+					var newX = (tx)*Math.cos(rot) - (ty)*Math.sin(rot) + selectedFormObject.x2 + (xOriginRotation - selectedFormObject.x1)/2;
+					var newY = (tx)*Math.sin(rot) + (ty)*Math.cos(rot) + selectedFormObject.y2 + (yOriginRotation - selectedFormObject.y1)/2;
+					
+					selectedFormObject.x2 = newX;
+					selectedFormObject.y2 = newY;
+				} else {
+					selectedFormObject.x2 = r[0];
+					selectedFormObject.y2 = r[1];
+				}
+				
+				console.log(r[0], r[1]);*/				
+				repaint();
+			} 
+		}
+		
+		/*function rotate(cx, cy, x, y, angle) {
+			var radians = (Math.PI / 180) * angle,
+				cos = Math.cos(radians),
+				sin = Math.sin(radians),
+				nx = (cos * (x - cx)) + (sin * (y - cy)) + cx,
+				ny = (cos * (y - cy)) - (sin * (x - cx)) + cy;
+			return [nx, ny];
+		}*/
+
+		function keyPress(event) {
+			event = event || window.event;
+
+			if((event.which == 26 || event.keyCode == 26) && event.ctrlKey) {
+				if(historyFormsUndo.length > 0) {
+					historyFormsRedo.push(formsObjects[formsObjects.length - 1]);
+					historyFormsUndo.pop();
+					formsObjects.pop();					
+					repaint();
+				}
+			} else if((event.which == 25 || event.keyCode == 25) && event.ctrlKey) {
+				if(historyFormsRedo.length > 0) {
+					historyFormsUndo.push(historyFormsRedo[historyFormsRedo.length - 1]);
+					formsObjects.push(historyFormsRedo[historyFormsRedo.length - 1]);
+					historyFormsRedo.pop();					
+					repaint();
+				}
+			} else if(event.which == 108 || event.keyCode == 76) { 
+				document.getElementById('formLine').checked = true;
+			} else if(event.which == 114 || event.keyCode == 82) { 
+				document.getElementById('formRectangle').checked = true;
+			} else if(event.which == 101 || event.keyCode == 69) { 
+				document.getElementById('formElipse').checked = true;
+			} else if(event.which == 112 || event.keyCode == 80) { 
+				document.getElementById('formPolygon').checked = true;
+			} 
+		}
+		
+		function drawLine(xBegin, yBegin, xEnd, yEnd, rotationAngle) {
+			context.beginPath();
+			
+			if(rotationAngle != null) {				
+				context.translate(xBegin + (xEnd - xBegin) * 0.5, yBegin + (yEnd - yBegin) * 0.5);
+				context.rotate(convertToRadians(rotationAngle));
+				context.translate(-(xBegin + (xEnd - xBegin) * 0.5), -(yBegin + (yEnd - yBegin) * 0.5));				
+			}
+			
+			context.moveTo(xBegin, yBegin);			
+			context.lineTo(xEnd, yEnd);
+			context.stroke();							
+			context.closePath();
+			context.setTransform(1,0,0,1,0,0);
+		}
+		
+		function drawRetangle(xBegin, yBegin, xEnd, yEnd, rotationAngle) {
+			context.beginPath();
+			
+			if(rotationAngle != null) {				
+				context.translate(xBegin + (xEnd - xBegin) * 0.5, yBegin + (yEnd - yBegin) * 0.5);
+				context.rotate(convertToRadians(rotationAngle));
+				context.translate(-(xBegin + (xEnd - xBegin) * 0.5), -(yBegin + (yEnd - yBegin) * 0.5));				
+			}
+			
+			context.rect(xBegin, yBegin, xEnd - xBegin, yEnd - yBegin);
+			context.stroke();
+			context.closePath();
+			context.setTransform(1,0,0,1,0,0);
+		}
+		
+		function drawElipse(xBegin, yBegin, xEnd, yEnd, rotationAngle) {
+			var kappa = .5522848,
+			  ox = ((xEnd - xBegin) / 2) * kappa, 
+			  oy = ((yEnd - yBegin) / 2) * kappa, 
+			  xe = xBegin + (xEnd - xBegin), 
+			  ye = yBegin + (yEnd - yBegin), 
+			  xm = xBegin + (xEnd - xBegin) / 2, 
+			  ym = yBegin + (yEnd - yBegin) / 2; 
+
+			context.beginPath();
+			
+			if(rotationAngle != null) {				
+				context.translate(xBegin + (xEnd - xBegin) * 0.5, yBegin + (yEnd - yBegin) * 0.5);
+				context.rotate(convertToRadians(rotationAngle));
+				context.translate(-(xBegin + (xEnd - xBegin) * 0.5), -(yBegin + (yEnd - yBegin) * 0.5));				
+			}
+			
+			context.moveTo(xBegin, ym);
+			context.bezierCurveTo(xBegin, ym - oy, xm - ox, yBegin, xm, yBegin);
+			context.bezierCurveTo(xm + ox, yBegin, xe, ym - oy, xe, ym);
+			context.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye);
+			context.bezierCurveTo(xm - ox, ye, xBegin, ym + oy, xBegin, ym);
+			context.stroke();
+			context.closePath();
+			context.setTransform(1,0,0,1,0,0);
+		}
+		
+		function drawPolygon(xBegin, yBegin, xEnd, yEnd, numberSides, rotationAngle) {
+			var xs = new Array(numberSides);
+			var ys = new Array(numberSides);
+			var radius = Math.sqrt((xEnd - xBegin) * (xEnd - xBegin) + (yEnd - yBegin) * (yEnd - yBegin));
+			var angle = convertToDegrees(Math.atan2((yEnd - yBegin), (xEnd - xBegin)));
+			var angleIncrement = 360.0 / numberSides;
+			var area = 0.0;	
+			var cx = 0;
+			var cy = 0;
+			
+			for(var i = 0; i < numberSides; i++) {
+				xs[i] = xBegin + Math.cos(convertToRadians(angle)) * radius;
+				ys[i] = yBegin + Math.sin(convertToRadians(angle)) * radius;
+				angle += angleIncrement;
+			}
+			
+			for(var i = 0; i < numberSides; ++i) {
+				var x0 = xs[i];
+				var y0 = ys[i];
+				var x1 = xs[(i + 1) % numberSides];
+				var y1 = ys[(i + 1) % numberSides];
+				var a = x0 * y1 - x1 * y0;
+				area += a;
+				cx += (x0 + x1) * a;
+				cy += (y0 + y1) * a;
+			}
+
+			area *= 0.5;
+			cx /= (6.0 * area);
+			cy /= (6.0 * area);
+	
+			context.beginPath();
+			
+			if(rotationAngle != null) {				
+				context.translate(cx, cy);
+				context.rotate(convertToRadians(rotationAngle));
+				context.translate(-cx, -cy);				
+			}
+			
+			context.moveTo(xs[0], ys[0]);	
+			
+			for(var i = 1; i < numberSides; i++) {
+				context.lineTo(xs[i], ys[i]);
+			}
+			
+			context.closePath();			
+			context.stroke();
+			context.closePath();
+			context.setTransform(1,0,0,1,0,0);
+			
+			/*context.beginPath();
+			//context.arc(cx, cy, radius * 5/100, 0, 2 * Math.PI);
+			context.arc(cx, cy, 2, 0, 2 * Math.PI);
+			context.fill();
+			context.closePath();*/
+		}
+		
+		function drawStar(xBegin, yBegin, xEnd, yEnd, numberSides, rotationAngle) {
+			var xs = new Array(numberSides);
+			var ys = new Array(numberSides);
+			var radius = Math.sqrt((xEnd - xBegin) * (xEnd - xBegin) + (yEnd - yBegin) * (yEnd - yBegin));
+			var angle = convertToDegrees(Math.atan2((yEnd - yBegin), (xEnd - xBegin)));
+			var angleIncrement = 360.0 / numberSides;
+			var area = 0.0;	
+			var cx = 0;
+			var cy = 0;
+			
+			for(var i = 0; i < numberSides; i++) {
+				xs[i] = xBegin + Math.cos(convertToRadians(angle)) * radius;
+				ys[i] = yBegin + Math.sin(convertToRadians(angle)) * radius;
+				angle += angleIncrement;
+			}
+			
+			for(var i = 0; i < numberSides; ++i) {
+				var x0 = xs[i];
+				var y0 = ys[i];
+				var x1 = xs[(i + 1) % numberSides];
+				var y1 = ys[(i + 1) % numberSides];
+				var a = x0 * y1 - x1 * y0;
+				area += a;
+				cx += (x0 + x1) * a;
+				cy += (y0 + y1) * a;
+			}
+
+			area *= 0.5;
+			cx /= (6.0 * area);
+			cy /= (6.0 * area);
+			
+			context.beginPath();
+			
+			if(rotationAngle != null) {				
+				context.translate(cx, cy);
+				context.rotate(convertToRadians(rotationAngle));
+				context.translate(-cx, -cy);		
+			}
+			
+			context.moveTo(xs[0], ys[0]);	
+			
+			if(numberSides % 2 == 0) {
+				for(var i = 2; i < numberSides; i += 2) {
+					context.lineTo(xs[i], ys[i]);
+				}
+				
+				context.closePath();
+				context.moveTo(xs[1], ys[1]);
+				
+				for(var i = 3; i < numberSides; i += 2) {
+					context.lineTo(xs[i], ys[i]);
+				}
+			} else {
+				for(var i = 2; i < numberSides * 2; i += 2) {
+					context.lineTo(xs[i % numberSides], ys[i % numberSides]);
+				}
+			}
+			
+			context.closePath();			
+			context.stroke();
+			context.closePath();
+			context.setTransform(1,0,0,1,0,0);
+		}
+		
+		function interceptLine(xBegin, yBegin, xEnd, yEnd, xPos, yPos) {
+			var x1 = xBegin < xEnd ? xBegin : xEnd;
+			var y1 = yBegin < yEnd ? yBegin : yEnd;
+			var x2 = xBegin < xEnd ? xEnd : xBegin;
+			var y2 = yBegin < yEnd ? yEnd : yBegin;
+			
+			return xPos >= x1 && xPos <= x2 && yPos >= y1 && yPos <= y2;
+		}
+		
+		function interceptRectangle(xBegin, yBegin, xEnd, yEnd, xPos, yPos) {			
+			return xPos >= xBegin && xPos <= xEnd && yPos >= yBegin && yPos <= yEnd;
+		}
+		
+		function interceptElipse(xBegin, yBegin, xEnd, yEnd, xPos, yPos) {			
+			return xPos >= xBegin && xPos <= xEnd && yPos >= yBegin && yPos <= yEnd;
+		}
+		
+		function interceptPolygon(xBegin, yBegin, xEnd, yEnd, xPos, yPos) {		
+			var radius = Math.sqrt((xEnd - xBegin) * (xEnd - xBegin) + (yEnd - yBegin) * (yEnd - yBegin));
+			
+			return (xPos - xBegin) * (xPos - xBegin) + (yPos - yBegin) * (yPos - yBegin) <= radius * radius;
+		}
+		
+		function interceptStar(xBegin, yBegin, xEnd, yEnd, xPos, yPos) {		
+			var radius = Math.sqrt((xEnd - xBegin) * (xEnd - xBegin) + (yEnd - yBegin) * (yEnd - yBegin));
+			
+			return (xPos - xBegin) * (xPos - xBegin) + (yPos - yBegin) * (yPos - yBegin) <= radius * radius;
+		}
+		
+		function repaint() {
+			context.clearRect(0, 0, canvas.width, canvas.height);
+			
+			formsObjects.forEach(function(obj) {
+				switch(obj.formObject) {
+					case "line":
+						drawLine(obj.x1, obj.y1, obj.x2, obj.y2, obj.rotationAngle);			
+					break;
+					case "rectangle":
+						drawRetangle(obj.x1, obj.y1, obj.x2, obj.y2, obj.rotationAngle);
+					break;
+					case "elipse":
+						drawElipse(obj.x1, obj.y1, obj.x2, obj.y2, obj.rotationAngle);
+					break;
+					case "polygon":
+						drawPolygon(obj.x1, obj.y1, obj.x2, obj.y2, obj.numberSides, obj.rotationAngle);
+					break;
+					case "star":
+						drawStar(obj.x1, obj.y1, obj.x2, obj.y2, obj.numberSides, obj.rotationAngle);
+					break;
+				}
+			});
+		}
+		
+		function clearCanvas(){
+			formsObjects = [];
+			historyFormsUndo = [];
+			historyFormsRedo = [];
+			draw = false;
+			
+			context.clearRect(0, 0, canvas.width, canvas.height);			
+		}
+		
+		function checkMouseInDrawableArea(x, y) {
+			var canvasPosition = document.getElementById("myCanvas").getBoundingClientRect();
+			
+			if((x >= canvasPosition.left) && (x <= (canvasPosition.left + canvasPosition.width)) && (y >= canvasPosition.top) && (y <= (canvasPosition.top + canvasPosition.height)))
+				return true;
+			else
+				return false;
+		}
+		
+		function convertToRadians(degrees) {
+			return degrees * Math.PI / 180;
+		}
+		
+		function convertToDegrees(radians) {
+			return radians * 180 / Math.PI;
+		}
+		
+		function isEmpty(obj) {
+			for(var prop in obj) {
+				if(obj.hasOwnProperty(prop))
+					return false;
+			}
+
+			return JSON.stringify(obj) === JSON.stringify({});
+		}
+    </script>
+  </body>
+</html>      

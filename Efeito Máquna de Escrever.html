@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+	<meta charset="utf-8"/>
+	<title>Teste</title>
+</head>
+<body>
+	<div id="mensagem" class="mensagem-maquina-escrever"></div>
+	
+	<script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+  
+	<script type="text/javascript">
+		
+		$(document).ready(function() {
+			var mensagens = [
+				"Primeira mensagem.",
+				"Segunda mensagem.",
+				"Terceira mensagem."
+			];
+			
+			var index = 0;
+			
+			function escreverMensagem(texto, indexCaractere, cursorOn, div) {
+				if (indexCaractere < texto.length) {
+					div.text((cursorOn ? div.text() : div.text().slice(0, -1)) + texto.charAt(indexCaractere) + (cursorOn ? "|" : ""));					
+					setTimeout(function() {
+						escreverMensagem(texto, indexCaractere + 1, !cursorOn, div);
+					}, 100);
+				} else {
+					if(!cursorOn) 
+						div.text(div.text().slice(0, -1));
+					
+					setTimeout(function() {
+						div.text('');
+						index = (index + 1) % mensagens.length;
+						escreverMensagem(mensagens[index], 0, true, div);
+					}, 10000);
+				}
+			}
+			
+			escreverMensagem(mensagens[index], 0, true, $('#mensagem'));
+		});
+	
+	</script>
+</body>
+</html>

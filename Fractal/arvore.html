@@ -1,0 +1,33 @@
+<html>
+  <head>
+    <style>
+      #canvas {
+        border: 1px solid black;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas" width="600" height="600"></canvas>
+    <script>
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+
+      function drawBranch(x1, y1, angle, length) {
+        const x2 = x1 + length * Math.cos(angle);
+        const y2 = y1 + length * Math.sin(angle);
+
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+
+        if (length > 10) {
+          drawBranch(x2, y2, angle - Math.PI / 6, length * 0.75);
+          drawBranch(x2, y2, angle + Math.PI / 6, length * 0.75);
+        }
+      }
+
+      drawBranch(300, 600, -Math.PI / 2, 100);
+    </script>
+  </body>
+</html>

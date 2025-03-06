@@ -1,0 +1,59 @@
+<html>
+  <head>
+    <style>
+      #canvas {
+        border: 1px solid black;
+      }
+      #controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      #controls > * {
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas" width="600" height="600"></canvas>
+    <div id="controls">
+      <label>
+        Interações: <input id="iterations-input" type="number" value="500" step="1">
+      </label>
+      <button id="generate-button">Draw</button>
+    </div>
+    <script>
+		const canvas = document.getElementById("canvas");
+		const ctx = canvas.getContext("2d");
+		const iterationsInput = document.getElementById("iterations-input");
+		const generateButton = document.getElementById("generate-button");
+
+		const width = canvas.width;
+		const height = canvas.height;
+		const centerX = Math.floor(width / 2);
+		const centerY = Math.floor(height / 2);
+
+		generateButton.addEventListener("click", draw);
+		
+		function draw() {
+			const iterations = parseInt(iterationsInput.value);
+			ctx.clearRect(0, 0, width, height);
+
+			let x = centerX;
+			let y = centerY;
+			let angle = 0;
+			let step = 5;
+
+			for (let i = 0; i < iterations; i++) {
+			ctx.fillRect(x, y, 1, 1);
+			angle += 0.1;
+			x += step * Math.cos(angle);
+			y += step * Math.sin(angle);
+			step *= 1.01;
+			}
+		}
+		
+		draw();
+    </script>
+  </body>
+</html>

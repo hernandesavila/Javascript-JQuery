@@ -1,0 +1,161 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+      #myCanvas {
+        position: absolute;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body onload="drawBalls();">
+    <canvas id="myCanvas"></canvas>  
+    <script>
+      const MAX_BALLS_NUMBER = 50;
+
+      var canvas = document.getElementById('myCanvas');
+      var context = canvas.getContext('2d');
+
+      canvas.width = document.documentElement.clientWidth - 10;
+      canvas.height = document.documentElement.clientHeight - 10;
+
+      context.imageSmoothingEnabled = true;
+
+      var width = canvas.width;
+      var height = canvas.height;
+      var balls = [];
+
+      for (let i = 0; i < MAX_BALLS_NUMBER; i++) {
+        createBall();
+      }
+
+      function createBall() {
+        let radius = getRndInteger(5, 30);
+		
+        let ball = {
+          x: getRndInteger(radius, width - radius),
+          y: getRndInteger(radius, height - radius),
+          radius: radius,
+          dirX: Math.random() < 0.5 ? -1 : 1,
+          dirY: Math.random() < 0.5 ? -1 : 1,
+          speed: getRndInteger(2, 4),
+          color: {
+            r: getRndInteger(10, 255),
+            g: getRndInteger(10, 255),
+            b: getRndInteger(10, 255)
+          }
+        };
+
+        ensureNoOverlap(ball);
+        balls.push(ball);
+      }
+
+      function ensureNoOverlap(ball) {
+        let overlapping = true;
+
+        while (overlapping) {
+          overlapping = false;
+		  
+          for (let other of balls) {
+            if (detectCollision(ball, other)) {
+              ball.x = getRndInteger(ball.radius, width - ball.radius);
+              ball.y = getRndInteger(ball.radius, height - ball.radius);
+              overlapping = true;
+              break;
+            }
+          }
+        }
+      }
+
+      function drawBalls() {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        balls.forEach(ball => {
+          updatePosition(ball);
+          detectWallCollision(ball);
+
+          balls.forEach(other => {
+            if (ball !== other && detectCollision(ball, other)) {
+              resolveCollision(ball, other);
+            }
+          });
+
+          drawBall(ball);
+        });
+
+        requestAnimationFrame(drawBalls);
+      }
+
+      function updatePosition(ball) {
+        ball.x += ball.dirX * ball.speed;
+        ball.y += ball.dirY * ball.speed;
+      }
+
+      function detectWallCollision(ball) {
+        if (ball.x + ball.radius > width || ball.x - ball.radius < 0) {
+          ball.dirX *= -1;
+        }
+        if (ball.y + ball.radius > height || ball.y - ball.radius < 0) {
+          ball.dirY *= -1;
+        }
+      }
+
+      function resolveCollision(ball1, ball2) {
+        const dx = ball2.x - ball1.x;
+        const dy = ball2.y - ball1.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < ball1.radius + ball2.radius) {
+          const angle = Math.atan2(dy, dx);
+          const overlap = ball1.radius + ball2.radius - distance;
+
+          // Reposicionar as bolinhas para fora uma da outra
+          ball1.x -= Math.cos(angle) * overlap / 2;
+          ball1.y -= Math.sin(angle) * overlap / 2;
+          ball2.x += Math.cos(angle) * overlap / 2;
+          ball2.y += Math.sin(angle) * overlap / 2;
+
+          // Inverter direções após a colisão
+          let tempDirX = ball1.dirX;
+          let tempDirY = ball1.dirY;
+		  
+          ball1.dirX = ball2.dirX;
+          ball1.dirY = ball2.dirY;
+          ball2.dirX = tempDirX;
+          ball2.dirY = tempDirY;
+        }
+      }
+
+      function drawBall(ball) {
+        context.beginPath();
+        context.arc(ball.x, ball.y, ball.radius, 0, 2 * Math.PI);
+        context.fillStyle = `rgb(${ball.color.r}, ${ball.color.g}, ${ball.color.b})`;
+        context.fill();
+      }
+
+      function detectCollision(ball1, ball2) {
+        const dx = ball1.x - ball2.x;
+        const dy = ball1.y - ball2.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+		
+        return distance < ball1.radius + ball2.radius;
+      }
+
+      function getRndInteger(min, max) {
+        return Math.floor(Math.random() * (max - min)) + min;
+      }
+
+      window.addEventListener("resize", () => {
+        canvas.width = document.documentElement.clientWidth - 10;
+        canvas.height = document.documentElement.clientHeight - 10;
+        width = canvas.width;
+        height = canvas.height;
+      });
+    </script>
+  </body>
+</html>

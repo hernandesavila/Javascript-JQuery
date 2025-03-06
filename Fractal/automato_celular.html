@@ -1,0 +1,46 @@
+<html>
+  <head>
+    <style>
+      #canvas {
+        border: 1px solid black;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas" width="600" height="600"></canvas>
+    <script>
+		const canvas = document.getElementById("canvas");
+		const ctx = canvas.getContext("2d");
+
+		const width = canvas.width;
+		const height = canvas.height;
+		const rule = 110;
+
+		const states = [];
+		for (let i = 0; i < 8; i++) {
+		  states[i] = (rule & (1 << i)) >> i;
+		}
+
+		let cells = [];
+		for (let i = 0; i < width; i++) {
+		  cells[i] = 0;
+		}
+		cells[Math.floor(width / 2)] = 1;
+
+		for (let row = 0; row < height; row++) {
+		  let nextRow = [];
+		  for (let i = 0; i < width; i++) {
+			let left = cells[i - 1] || 0;
+			let center = cells[i];
+			let right = cells[i + 1] || 0;
+			nextRow[i] = states[left * 4 + center * 2 + right];
+		  }
+		  cells = nextRow;
+		  for (let i = 0; i < width; i++) {
+			ctx.fillStyle = cells[i] ? "black" : "white";
+			ctx.fillRect(i, row, 1, 1);
+		  }
+		}
+    </script>
+  </body>
+</html>

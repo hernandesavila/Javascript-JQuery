@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    #container {
+      position: relative;
+      height: 500px;
+      width: 100%;
+    }
+
+    .firework {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      z-index: 1;
+      background-color: red;
+      border-radius: 50%;
+      width: 10px;
+      height: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      $("#container").click(function(e) {
+        for (var i = 0; i < 20; i++) {
+          createFirework(e.pageX, e.pageY);
+        }
+      });
+    });
+
+    function createFirework(x, y) {
+      var firework = $("<div class='firework'></div>");
+      firework.css("top", y + "px");
+      firework.css("left", x + "px");
+      firework.appendTo("#container");
+
+      firework.animate(
+        {
+          top: y - 100 + "px",
+          left: x + 100 * (Math.random() - 0.5) + "px",
+          width: "50px",
+          height: "50px",
+          opacity: 0
+        },
+        2000,
+        function() {
+          firework.remove();
+        }
+      );
+    }
+  </script>
+</body>
+</html>

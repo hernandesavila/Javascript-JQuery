@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Jogo da Velha</title>
+    <style>
+      table {
+        border-collapse: collapse;
+		margin: 0 auto;
+      }
+      td {
+        border: 1px solid black;
+        width: 50px;
+        height: 50px;
+        text-align: center;
+        font-size: 32px;
+      }
+	  h1 {
+		text-align: center;
+		}
+    </style>
+  </head>
+  <body>
+    <h1>Jogo da Velha</h1>
+    <table>
+      <tr>
+        <td id="0"></td>
+        <td id="1"></td>
+        <td id="2"></td>
+      </tr>
+      <tr>
+        <td id="3"></td>
+        <td id="4"></td>
+        <td id="5"></td>
+      </tr>
+      <tr>
+        <td id="6"></td>
+        <td id="7"></td>
+        <td id="8"></td>
+      </tr>
+    </table>
+    <script>
+	
+	let board = ['', '', '', '', '', '', '', '', ''];
+	let currentPlayer = 'X';
+	let gameover = false;
+
+	function play(event) {
+	  if (gameover) {
+		return;
+	  }
+	  let id = event.target.id;
+	  if (board[id] === '') {
+		board[id] = currentPlayer;
+		event.target.textContent = currentPlayer;
+		if (checkWinner()) {
+		  alert(`${currentPlayer} ganhou!`);
+		  gameover = true;
+		} else if (board.every(square => square !== '')) {
+		  alert('Empate!');
+		  gameover = true;
+		} else {
+		  currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+		}
+	  }
+	}
+
+	function checkWinner() {
+	  const lines = [
+		[0, 1, 2], [3, 4, 5], [6, 7, 8], // horizontal
+		[0, 3, 6], [1, 4, 7], [2, 5, 8], // vertical
+		[0, 4, 8], [2, 4, 6] // diagonal
+	  ];
+	  for (let line of lines) {
+		if (board[line[0]] === board[line[1]] && board[line[1]] === board[line[2]] && board[line[0]] !== '') {
+		  return true;
+		}
+	  }
+	  return false;
+	}
+
+	document.querySelectorAll('td').forEach(square => square.addEventListener('click', play));
+	
+	</script>
+  </body>
+</html>

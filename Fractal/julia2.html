@@ -1,0 +1,102 @@
+<html>
+  <head>
+    <style>
+      #canvas {
+        border: 1px solid black;
+      }
+      #controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      #controls > * {
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas" width="600" height="600"></canvas>
+    <div id="controls">
+      <label>
+        cRe: <input id="cReInput" type="number" value="-0.7" step="0.01">
+      </label>
+      <label>
+        cIm: <input id="cImInput" type="number" value="0.27015" step="0.01">
+      </label>
+      <label>
+        Max Iterations: <input id="maxIterInput" type="number" value="100" step="1">
+      </label>
+      <button id="drawButton">Draw</button>
+    </div>
+    <script>
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      const cReInput = document.getElementById("cReInput");
+      const cImInput = document.getElementById("cImInput");
+      const maxIterInput = document.getElementById("maxIterInput");
+      const drawButton = document.getElementById("drawButton");
+		
+	  let zoom = 1;
+      let xOff = 0;
+      let yOff = 0;
+
+      canvas.addEventListener("wheel", (event) => {
+        event.preventDefault();
+
+        if (event.deltaY < 0) {
+          zoom *= 1.1;
+        } else {
+          zoom /= 1.1;
+        }
+
+        xOff -= event.clientX / zoom - event.clientX;
+        yOff -= event.clientY / zoom - event.clientY;
+
+        draw();
+      });
+	  
+      drawButton.addEventListener("click", draw);
+
+      function draw() {
+	    ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.scale(zoom, zoom);
+        ctx.translate(xOff / zoom, yOff / zoom);
+
+        const width = canvas.width / zoom;
+        const height = canvas.height / zoom;
+
+        const cRe = Number(cReInput.value);
+        const cIm = Number(cImInput.value);
+        const maxIter = Number(maxIterInput.value);
+
+        for (let x = 0; x < width; x++) {
+          for (let y = 0; y < height; y++) {
+            let zRe = (x - width / 2) * 4 / width;
+            let zIm = (y - height / 2) * 4 / width;
+
+            let iter = 0;
+            while (zRe * zRe + zIm * zIm < 4 && iter < maxIter) {
+              let newRe = zRe * zRe - zIm * zIm + cRe;
+              let newIm = 2 * zRe * zIm + cIm;
+              zRe = newRe;
+              zIm = newIm;
+              iter++;
+            }
+
+            if (iter < maxIter) {
+              let color = 255 * iter / maxIter;
+              ctx.fillStyle = `rgb(${color}, ${color}, ${color})`;
+              ctx.fillRect(x, y, 1 / zoom, 1 / zoom);
+            } else {
+              ctx.fillStyle = "black";
+              ctx.fillRect(x, y, 1 / zoom, 1 / zoom);
+            }
+          }
+        }
+      }
+	  
+	  draw();
+    </script>
+  </body>
+</html>

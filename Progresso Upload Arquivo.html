@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Upload de Arquivo com Progresso</title>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+	<form>
+		<input type="file" id="arquivo">
+		<button type="button" id="enviar">Enviar</button>
+	</form>
+
+	<div id="progresso"></div>
+
+	<script>
+		$(document).ready(function() {
+			$("#enviar").click(function() {
+				var arquivo = $("#arquivo")[0].files[0];
+
+				// Preparar os dados do formulário
+				var dados = new FormData();
+				dados.append("arquivo", arquivo);
+
+				// Fazer a solicitação de upload
+				$.ajax({
+					url: "upload.php",
+					type: "POST",
+					data: dados,
+					processData: false,
+					contentType: false,
+					xhr: function() {
+						var xhr = new XMLHttpRequest();
+						// Ouvinte de evento para monitorar o progresso do upload
+						xhr.upload.addEventListener("progress", function(event) {
+							if (event.lengthComputable) {
+								var percentual = Math.round((event.loaded / event.total) * 100);
+								$("#progresso").text("Upload em andamento: " + percentual + "%");
+							}
+						});
+						return xhr;
+					},
+					success: function() {
+						$("#progresso").text("Upload concluído!");
+					},
+					error: function() {
+						$("#progresso").text("Ocorreu um erro durante o upload.");
+					}
+				});
+			});
+		});
+	</script>
+
+</body>
+</html>
